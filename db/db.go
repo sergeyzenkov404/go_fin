@@ -6,7 +6,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const cteateTable = `
+const createTable = `
 	CREATE TABLE IF NOT EXISTS scheduler (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		date CHAR(8) NOT NULL DEFAULT "",
@@ -24,9 +24,8 @@ func Init(dbFile string) error {
 	if err != nil {
 		return err
 	}
-	//defer DB.Close()
 
-	_, err = DB.Exec(cteateTable)
+	_, err = DB.Exec(createTable)
 
 	if err != nil {
 		return err

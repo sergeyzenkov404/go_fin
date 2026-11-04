@@ -20,9 +20,9 @@ func Tasks(limit int, search string) ([]*Task, error) {
 		d, err2 := time.Parse("02.01.2006", search)
 		if err2 == nil {
 			dd := d.Format("20060102")
-			rows, err = DB.Query("SELECT * FROM scheduler WHERE date = ? LIMIT ?", dd, limit)
+			rows, err = DB.Query("SELECT id, date, title, comment, repeat FROM scheduler WHERE date = ? LIMIT ?", dd, limit)
 		} else {
-			rows, err = DB.Query("SELECT * FROM scheduler WHERE title LIKE ? OR comment LIKE ? ORDER BY date LIMIT ?", "%"+search+"%", "%"+search+"%", limit)
+			rows, err = DB.Query("SELECT id, date, title, comment, repeat FROM scheduler WHERE title LIKE ? OR comment LIKE ? ORDER BY date LIMIT ?", "%"+search+"%", "%"+search+"%", limit)
 		}
 	} else {
 		rows, err = DB.Query(`SELECT id, date, title, comment, repeat FROM scheduler 

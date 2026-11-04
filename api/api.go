@@ -71,7 +71,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	}
 
 	if repeat == "" {
-		return "", nil
+		return "", fmt.Errorf("invalid repeat format")
 	}
 
 	rul := strings.Split(repeat, " ")
@@ -162,7 +162,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 			startY = now.Year()
 		}
 
-		for y := startY; y < startY+2; y++ {
+		for y := startY; y < startY+10; y++ {
 			for m := 1; m <= 12; m++ {
 				if !mm[m] {
 					continue
@@ -189,7 +189,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 					dateM := time.Date(y, time.Month(m), day, 0, 0, 0, 0, time.UTC)
 
-					if dateM.Before(date) {
+					if dateM.Before(date) || dateM.Equal(date) {
 						continue
 					}
 					if afterNow(dateM, now) {
@@ -241,42 +241,41 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	return "", fmt.Errorf("unsupported repeat rule")
 }
 
+var pass = os.Getenv("TODO_PASSWORD")
+
 func auth(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		pass := os.Getenv("TODO_PASSWORD")
 
 		if len(pass) > 0 {
 			var tokenC string
 
 			cookie, err := r.Cookie("token")
 
-			if err == nil {
-				tokenC = cookie.Value
+			if err != nil || cookie.Value == "" {
+				http.Error(w, "Authentification required", http.StatusUnauthorized)
+				return
 			}
 
-			//var valid bool
+			tokenC = cookie.Value
 
-			if tokenC != "" {
+			jwtToken, err := jwt.Parse(tokenC, func(t *jwt.Token) (interface{}, error) {
 
-				jwtToken, err := jwt.Parse(tokenC, func(t *jwt.Token) (interface{}, error) {
+				return []byte(pass), nil
 
-					return []byte(pass), nil
+			})
 
-				})
-
-				if err != nil && !jwtToken.Valid {
-					http.Error(w, "Authentification required", http.StatusUnauthorized)
-					return
-				}
+			if err != nil || !jwtToken.Valid {
+				http.Error(w, "Authentification required", http.StatusUnauthorized)
+				return
 			}
+
 		}
 		next(w, r)
 	})
 }
 
 func signinHandler(w http.ResponseWriter, r *http.Request) {
-	pass := os.Getenv("TODO_PASSWORD")
+
 	var passR signinR
 
 	err := json.NewDecoder(r.Body).Decode(&passR)

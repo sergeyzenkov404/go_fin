@@ -13,12 +13,16 @@ import (
 
 func main() {
 
-	dbFile := "scheduler.db"
+	dbFile := os.Getenv("TODO_DBFILE")
+	if dbFile == "" {
+		dbFile = "scheduler.db"
+	}
+
 	err := db.Init(dbFile)
 	if err != nil {
 		log.Fatalf("fail to init db: %v", err)
 	}
-
+	defer db.DB.Close()
 	port := os.Getenv("TODO_PORT")
 	if port == "" {
 		port = "7540"
@@ -30,9 +34,7 @@ func main() {
 	api.Init(r)
 
 	r.Handle("/*", http.FileServer(http.Dir("./web")))
-	//r.Handle("/js/scripts.min.js", http.FileServer(http.Dir("./web/js/scripts.min.js")))
-	//r.Handle("/css/style.css", http.FileServer(http.Dir("./web/css/style.css")))
-	//	r.Handle("/favicon.ico", http.FileServer(http.Dir("./web/favicon.ico")))
+
 	log.Printf("Listening on %s", port)
 	if err := http.ListenAndServe(port, r); err != nil {
 		log.Fatal(err)

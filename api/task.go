@@ -9,6 +9,8 @@ import (
 	"github.com/sergeyzenkov404/go_fin/db"
 )
 
+const formatT = "20060102"
+
 func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 	var taskDB db.Task
 
@@ -22,8 +24,6 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "empty title")
 		return
 	}
-
-	defer r.Body.Close()
 
 	err = checkDate(&taskDB)
 	if err != nil {
@@ -44,10 +44,10 @@ func checkDate(taskDB *db.Task) error {
 	now := time.Now()
 
 	if taskDB.Date == "" {
-		taskDB.Date = now.Format("20060102")
+		taskDB.Date = now.Format(formatT)
 	}
 
-	t, err := time.Parse("20060102", taskDB.Date)
+	t, err := time.Parse(formatT, taskDB.Date)
 	if err != nil {
 		return fmt.Errorf("invalid date format")
 	}
@@ -62,7 +62,7 @@ func checkDate(taskDB *db.Task) error {
 
 	if afterNow(now, t) {
 		if len(taskDB.Repeat) == 0 {
-			taskDB.Date = now.Format("20060102")
+			taskDB.Date = now.Format(formatT)
 		} else {
 			taskDB.Date = next
 		}
@@ -131,8 +131,6 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	defer r.Body.Close()
-
 	if taskDB.Id == 0 {
 		writeError(w, http.StatusBadRequest, "id пуст")
 		return
@@ -175,6 +173,12 @@ func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	if task.Repeat == "" {
 		err = db.DeleteTask(id)
+
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "delete error")
+			return
+		}
+
 	} else {
 		next, err = NextDate(now, task.Date, task.Repeat)
 
