@@ -25,7 +25,7 @@ func main() {
 	defer db.DB.Close()
 	port := os.Getenv("TODO_PORT")
 	if port == "" {
-		port = "7540"
+		port = "7545"
 	}
 	port = ":" + port
 

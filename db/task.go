@@ -53,7 +53,7 @@ func Tasks(limit int, search string) ([]*Task, error) {
 }
 
 func GetTask(id string) (*Task, error) {
-	selectID := `SELECT id, date, title, comment, repeat FROM scheduler WHERE id = $1`
+	selectID := `SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?`
 	t := new(Task)
 
 	err := DB.QueryRow(selectID, id).Scan(&t.Id, &t.Date, &t.Title, &t.Comment, &t.Repeat)
